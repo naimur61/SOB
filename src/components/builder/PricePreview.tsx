@@ -27,7 +27,7 @@ function PricePreview({ config, quantity }: Props) {
 
   return (
     <dl className="price">
-      <dt>Options total</dt>
+      <dt>Base + options</dt>
       <dd>{formatTaka(line.unitSubtotal)}</dd>
       {line.extrasDiscount > 0 && (
         <>
