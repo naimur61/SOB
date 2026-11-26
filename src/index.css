@@ -47,11 +47,6 @@ button:disabled {
 }
 
 .header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }

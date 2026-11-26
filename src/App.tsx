@@ -29,7 +29,7 @@ function App() {
 
   return (
     <main className="container">
-      <Header serverNow={serverNow} />
+      <Header />
 
       <nav className="nav">
         {pages.map(({ id, label }) => (

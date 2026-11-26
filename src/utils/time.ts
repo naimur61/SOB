@@ -1,13 +1,3 @@
-// Shows a time the way the shop sees it: Asia/Dhaka, 24h.
-export function formatDhakaTime(ms: number) {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Dhaka",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(ms);
-}
-
 // 299500 -> "5:00", 61000 -> "1:01"
 export function formatCountdown(ms: number) {
   const seconds = Math.max(0, Math.ceil(ms / 1000));
