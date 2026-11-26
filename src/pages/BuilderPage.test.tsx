@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
+import { RESERVATION_MS, reserveItem } from "../mocks/cart";
 import { server } from "../mocks/server";
 import BuilderPage from "./BuilderPage";
 
@@ -75,4 +76,17 @@ test("add to cart is blocked until the item is valid, then holds stock", async (
   expect(await screen.findByRole("status")).toHaveTextContent("Added to cart");
   // 10 eggs in stock, 2 are now reserved
   expect(await screen.findByText("can add 8")).toBeInTheDocument();
+});
+
+test("stock comes back on screen when a reservation expires", async () => {
+  reserveItem({ config: { toast: 1, scrambled: 2, sausage: 1 }, quantity: 1 }, "item");
+  const { rerender } = render(<BuilderPage serverNow={Date.now()} />);
+  expect(await screen.findByText("can add 19")).toBeInTheDocument(); // toast
+
+  // five minutes pass on the server and on screen
+  vi.useFakeTimers({ toFake: ["Date"], now: Date.now() + RESERVATION_MS });
+  rerender(<BuilderPage serverNow={Date.now() + RESERVATION_MS} />);
+
+  expect(await screen.findByText("can add 20")).toBeInTheDocument(); // toast
+  vi.useRealTimers();
 });

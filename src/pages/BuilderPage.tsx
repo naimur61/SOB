@@ -8,6 +8,7 @@ import StockNote from "../components/builder/StockNote";
 import ViolationList from "../components/builder/ViolationList";
 import { validate } from "../engine/rules";
 import { addStock, findShortages, ingredientUsage, optionStock } from "../engine/stock";
+import { useCart } from "../hooks/useCart";
 import { useMenu } from "../hooks/useMenu";
 import { useStock } from "../hooks/useStock";
 import type { CartItem } from "../types/cart";
@@ -24,7 +25,11 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
   const expired = !!editing && !!serverNow && Date.parse(editing.expiresAt) <= serverNow;
 
   const { menu, error } = useMenu();
-  const { stock, error: stockError, reload: reloadStock } = useStock(expired);
+  const { items, reload: reloadCart } = useCart();
+  // An expiring reservation releases stock, so the stock is loaded again
+  const expiredCount =
+    items?.filter((item) => serverNow && Date.parse(item.expiresAt) <= serverNow).length ?? 0;
+  const { stock, error: stockError, reload: reloadStock } = useStock(expiredCount);
   const [config, setConfig] = useState<Config>(editing?.config ?? {});
   const [quantity, setQuantity] = useState(editing?.quantity ?? 1);
   const [added, setAdded] = useState(false);
@@ -57,6 +62,7 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
     setQuantity(1);
     setAdded(true);
     reloadStock();
+    reloadCart();
   };
 
   return (

@@ -3,7 +3,7 @@ import { getStock } from "../api/stock";
 import type { Stock } from "../engine/stock";
 
 // Loads again whenever refreshKey changes or reload() is called
-export function useStock(refreshKey = false) {
+export function useStock(refreshKey = 0) {
   const [stock, setStock] = useState<Stock | null>(null);
   const [error, setError] = useState("");
 
