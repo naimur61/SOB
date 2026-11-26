@@ -8,8 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --silent=passed-only",
+    "test:watch": "vitest",
+    "answers": "vitest run answers --disableConsoleIntercept"
   },
   "dependencies": {
     "react": "^19.3.1",
