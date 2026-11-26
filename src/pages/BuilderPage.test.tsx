@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { expect, test, vi } from "vitest";
 import { RESERVATION_MS, reserveItem } from "../mocks/cart";
+import { readDb } from "../mocks/db";
 import { server } from "../mocks/server";
 import BuilderPage from "./BuilderPage";
 
@@ -89,4 +90,18 @@ test("stock comes back on screen when a reservation expires", async () => {
 
   expect(await screen.findByText("can add 20")).toBeInTheDocument(); // toast
   vi.useRealTimers();
+});
+
+test("an option that was removed again is not saved with quantity 0", async () => {
+  render(<BuilderPage />);
+
+  await screen.findByRole("button", { name: "Add Toast" });
+  for (const name of ["Add Toast", "Add Scrambled", "Add Scrambled", "Add Tofu", "Add Cheese"]) {
+    fireEvent.click(screen.getByRole("button", { name }));
+  }
+  fireEvent.click(screen.getByRole("button", { name: "Remove Cheese" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add to Cart" }));
+
+  await screen.findByRole("status");
+  expect(readDb().items[0].config).toStrictEqual({ toast: 1, scrambled: 2, tofu: 1 });
 });

@@ -49,7 +49,11 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
 
   const changeQty = (optionId: string, qty: number) => {
     setAdded(false);
-    setConfig((current) => ({ ...current, [optionId]: qty }));
+    setConfig((current) => {
+      const next = { ...current, [optionId]: qty };
+      if (qty === 0) delete next[optionId]; // not picked, so not saved
+      return next;
+    });
   };
 
   // Start a fresh item, so the same one is not added again by mistake
