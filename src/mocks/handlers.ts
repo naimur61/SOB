@@ -59,6 +59,10 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  http.get("/api/orders", () => {
+    return HttpResponse.json(readDb().orders);
+  }),
+
   http.post("/api/checkout", async ({ request }) => {
     const payment = (await request.json()) as Payment;
     const key = request.headers.get("Idempotency-Key");

@@ -3,9 +3,16 @@ import Header from "./components/builder/Header";
 import { useServerClock } from "./hooks/useServerClock";
 import BuilderPage from "./pages/BuilderPage";
 import CartPage from "./pages/CartPage";
+import OrdersPage from "./pages/OrdersPage";
 import type { CartItem } from "./types/cart";
 
-type Page = "builder" | "cart";
+const pages = [
+  { id: "builder", label: "Builder" },
+  { id: "cart", label: "Cart" },
+  { id: "orders", label: "Orders" },
+] as const;
+
+type Page = (typeof pages)[number]["id"];
 
 function App() {
   const serverNow = useServerClock();
@@ -23,30 +30,27 @@ function App() {
       <Header serverNow={serverNow} />
 
       <nav className="nav">
-        <button
-          type="button"
-          aria-current={page === "builder" ? "page" : undefined}
-          onClick={() => open("builder")}
-        >
-          Builder
-        </button>
-        <button
-          type="button"
-          aria-current={page === "cart" ? "page" : undefined}
-          onClick={() => open("cart")}
-        >
-          Cart
-        </button>
+        {pages.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            aria-current={page === id ? "page" : undefined}
+            onClick={() => open(id)}
+          >
+            {label}
+          </button>
+        ))}
       </nav>
 
-      {page === "builder" ? (
+      {page === "builder" && (
         <BuilderPage
           key={editing?.id ?? "new"}
           editing={editing}
           serverNow={serverNow}
           onDone={() => open("cart")}
         />
-      ) : (
+      )}
+      {page === "cart" && (
         <CartPage
           serverNow={serverNow}
           couponCode={couponCode}
@@ -54,6 +58,7 @@ function App() {
           onEdit={(item) => open("builder", item)}
         />
       )}
+      {page === "orders" && <OrdersPage />}
     </main>
   );
 }

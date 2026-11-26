@@ -224,3 +224,22 @@ button.primary {
   font: inherit;
   padding: 6px 8px;
 }
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+th,
+td {
+  padding: 8px;
+  border: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
