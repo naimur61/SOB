@@ -26,3 +26,16 @@ test("plus and minus change the quantity, minus stops at 0", async () => {
   expect(add.previousSibling).toHaveTextContent("0");
   expect(remove).toBeDisabled();
 });
+
+test("violations update while the user is picking", async () => {
+  render(<BuilderPage />);
+
+  const add = await screen.findByRole("button", { name: "Add Scrambled" });
+  fireEvent.click(add);
+  fireEvent.click(add);
+  fireEvent.click(add);
+  expect(screen.getByText("Eggs: total must be 2-6 in steps of 2")).toBeInTheDocument();
+
+  fireEvent.click(add);
+  expect(screen.queryByText("Eggs: total must be 2-6 in steps of 2")).not.toBeInTheDocument();
+});
