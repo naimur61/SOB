@@ -1,9 +1,11 @@
 import { delay, http, HttpResponse } from "msw";
 import { priceCart } from "../engine/pricing";
 import type { Menu } from "../types/menu";
-import type { Cart } from "../types/price";
+import type { Cart, CartLine } from "../types/price";
+import { availableStock, reserveItem } from "./cart";
 import { serverNow } from "./clock";
 import menuJson from "./data/menu.json";
+import { readDb } from "./db";
 import { network } from "./network";
 
 const menu = menuJson as Menu;
@@ -13,9 +15,23 @@ export const handlers = [
     return HttpResponse.json(menu);
   }),
 
-  // Reservations will be subtracted here once the cart exists
   http.get("/api/stock", () => {
-    return HttpResponse.json(menu.stock);
+    return HttpResponse.json(availableStock(readDb().items));
+  }),
+
+  http.post("/api/cart", async ({ request }) => {
+    const line = (await request.json()) as CartLine;
+    const key = request.headers.get("Idempotency-Key");
+    if (!key) {
+      return HttpResponse.json({ message: "Idempotency key missing" }, { status: 400 });
+    }
+
+    const result = reserveItem(line, key);
+    if ("message" in result) {
+      return HttpResponse.json({ message: result.message }, { status: result.status });
+    }
+
+    return HttpResponse.json(result.item, { status: 201 });
   }),
 
   http.get("/api/time", () => {

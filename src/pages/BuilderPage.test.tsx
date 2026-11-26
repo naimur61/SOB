@@ -60,3 +60,19 @@ test("raising the quantity shows what is short", async () => {
 
   expect(screen.getByRole("alert")).toHaveTextContent("Short: 2 cheese");
 });
+
+test("add to cart is blocked until the item is valid, then holds stock", async () => {
+  render(<BuilderPage />);
+
+  const addToCart = await screen.findByRole("button", { name: "Add to Cart" });
+  expect(addToCart).toBeDisabled();
+
+  for (const name of ["Add Toast", "Add Scrambled", "Add Scrambled", "Add Chicken Sausage"]) {
+    fireEvent.click(screen.getByRole("button", { name }));
+  }
+  fireEvent.click(addToCart);
+
+  expect(await screen.findByRole("status")).toHaveTextContent("Added to cart");
+  // 10 eggs in stock, 2 are now reserved
+  expect(await screen.findByText("can add 8")).toBeInTheDocument();
+});

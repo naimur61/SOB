@@ -152,3 +152,13 @@ button:disabled {
   margin: 0;
   text-align: right;
 }
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.add-to-cart {
+  margin-bottom: 24px;
+}

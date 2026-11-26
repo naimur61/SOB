@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AddToCartButton from "../components/builder/AddToCartButton";
 import OptionGroup from "../components/builder/OptionGroup";
 import PricePreview from "../components/builder/PricePreview";
 import QuantityPicker from "../components/builder/QuantityPicker";
@@ -13,9 +14,10 @@ import { formatTaka } from "../utils/money";
 
 function BuilderPage() {
   const { menu, error } = useMenu();
-  const { stock, error: stockError } = useStock();
+  const { stock, error: stockError, reload: reloadStock } = useStock();
   const [config, setConfig] = useState<Config>({});
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
 
   if (error || stockError) return <p role="alert">{error || stockError}</p>;
   if (!menu || !stock) return <p>Loading menu...</p>;
@@ -25,7 +27,16 @@ function BuilderPage() {
   const shortages = findShortages(need, stock);
 
   const changeQty = (optionId: string, qty: number) => {
+    setAdded(false);
     setConfig((current) => ({ ...current, [optionId]: qty }));
+  };
+
+  // Start a fresh item, so the same one is not added again by mistake
+  const handleAdded = () => {
+    setConfig({});
+    setQuantity(1);
+    setAdded(true);
+    reloadStock();
   };
 
   return (
@@ -48,6 +59,13 @@ function BuilderPage() {
       <ViolationList violations={violations} />
       <StockNote shortages={shortages} />
       <PricePreview config={config} quantity={quantity} />
+      {added && <p role="status">Added to cart. Stock is held for 5 minutes.</p>}
+      <AddToCartButton
+        line={{ config, quantity }}
+        disabled={violations.length > 0 || shortages.length > 0}
+        onAdded={handleAdded}
+        onFailed={reloadStock}
+      />
     </>
   );
 }
