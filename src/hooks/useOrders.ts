@@ -1,16 +1,11 @@
-import { useEffect, useState } from "react";
-import { getOrders } from "../api/orders";
 import type { Order } from "../types/order";
+import useFetchData from "./TanstackQueries/useFetchData";
 
 export function useOrders() {
-  const [orders, setOrders] = useState<Order[] | null>(null);
-  const [error, setError] = useState("");
+  const { data, isError } = useFetchData<Order[]>({ queryKey: "orders", path: "orders" });
 
-  useEffect(() => {
-    getOrders()
-      .then(setOrders)
-      .catch(() => setError("Could not load the orders. Please reload the page."));
-  }, []);
-
-  return { orders, error };
+  return {
+    orders: data ?? null,
+    error: isError ? "Could not load the orders. Please reload the page." : "",
+  };
 }

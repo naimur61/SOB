@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { addToCart } from "../../api/cart";
+import { useApiMutation } from "../../hooks/TanstackQueries/useApiMutation";
+import type { CartItem } from "../../types/cart";
 import type { CartLine } from "../../types/price";
 
 type Props = {
@@ -13,6 +14,7 @@ function AddToCartButton({ line, disabled, onAdded, onFailed }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState({ body: "", message: "" });
   const lastRequest = useRef({ body: "", key: "" });
+  const add = useApiMutation<CartItem>({ method: "POST", path: "cart" });
 
   const body = JSON.stringify(line);
   // An error belongs to the selection that caused it
@@ -27,7 +29,10 @@ function AddToCartButton({ line, disabled, onAdded, onFailed }: Props) {
     setPending(true);
     setError({ body: "", message: "" });
     try {
-      await addToCart(line, lastRequest.current.key);
+      await add.mutateAsync({
+        body: line,
+        headers: { "Idempotency-Key": lastRequest.current.key },
+      });
       lastRequest.current = { body: "", key: "" };
       onAdded();
     } catch (err) {

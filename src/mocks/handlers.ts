@@ -27,7 +27,8 @@ export const handlers = [
       return HttpResponse.json({ message: "Idempotency key missing" }, { status: 400 });
     }
 
-    const result = reserveItem(line, key);
+    const fail = Math.random() < network.reserveFailRate;
+    const result = reserveItem(line, key, { fail });
     if ("message" in result) {
       return HttpResponse.json({ message: result.message }, { status: result.status });
     }

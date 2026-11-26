@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { expect, test, vi } from "vitest";
+import { render } from "../test/render";
 import { RESERVATION_MS, reserveItem } from "../mocks/cart";
 import { readDb } from "../mocks/db";
 import { server } from "../mocks/server";
@@ -31,7 +32,7 @@ test("plus and minus change the quantity, minus stops at 0", async () => {
   expect(remove).toBeDisabled();
 });
 
-test("violations update while the user is picking", async () => {
+test("TC-01 violations update while the user is picking", async () => {
   render(<BuilderPage />);
 
   const add = await screen.findByRole("button", { name: "Add Scrambled" });
@@ -44,7 +45,7 @@ test("violations update while the user is picking", async () => {
   expect(screen.queryByText("Eggs: total must be 2-6 in steps of 2")).not.toBeInTheDocument();
 });
 
-test("an option with no stock is disabled and says why", async () => {
+test("TC-08 an option with no stock is disabled and says why", async () => {
   server.use(http.get("/api/stock", () => HttpResponse.json({ egg: 0 })));
   render(<BuilderPage />);
 
@@ -76,10 +77,11 @@ test("add to cart is blocked until the item is valid, then holds stock", async (
 
   expect(await screen.findByRole("status")).toHaveTextContent("Added to cart");
   // 10 eggs in stock, 2 are now reserved
-  expect(await screen.findByText("can add 8")).toBeInTheDocument();
+  const scrambled = screen.getByRole("button", { name: "Add Scrambled" }).closest("li")!;
+  await waitFor(() => expect(scrambled).toHaveTextContent("can add 8"));
 });
 
-test("stock comes back on screen when a reservation expires", async () => {
+test("TC-15 stock comes back on screen when a reservation expires", async () => {
   reserveItem({ config: { toast: 1, scrambled: 2, sausage: 1 }, quantity: 1 }, "item");
   const { rerender } = render(<BuilderPage serverNow={Date.now()} />);
   expect(await screen.findByText("can add 19")).toBeInTheDocument(); // toast

@@ -13,7 +13,7 @@ test("Q5 data: the six seed orders are priced on first start", () => {
   expect(orders.every((order) => order.totals.payable > 0)).toBe(true);
 });
 
-test("checkout creates one order and turns reserved stock into sold stock", () => {
+test("TC-16 checkout creates one order and turns reserved stock into sold stock", () => {
   reserveItem({ config, quantity: 2 }, "item");
   const result = checkout(payment, "pay-1");
 
@@ -26,7 +26,7 @@ test("checkout creates one order and turns reserved stock into sold stock", () =
   vi.useRealTimers();
 });
 
-test("the same idempotency key returns the same order", () => {
+test("TC-16 the same idempotency key returns the same order", () => {
   reserveItem({ config, quantity: 1 }, "item");
   const first = checkout(payment, "pay-1");
   const second = checkout(payment, "pay-1");

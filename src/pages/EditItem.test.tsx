@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
+import { render } from "../test/render";
 import { reserveItem } from "../mocks/cart";
 import { readDb } from "../mocks/db";
 import BuilderPage from "./BuilderPage";

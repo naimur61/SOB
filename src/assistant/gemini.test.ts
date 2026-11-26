@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { reserveItem } from "../mocks/cart";
 import { checkout } from "../mocks/checkout";
 import { server } from "../mocks/server";
-import { askAssistant, CANNOT_ANSWER, GEMINI_URL } from "./gemini";
+import { askAssistant, CANNOT_ANSWER, GEMINI_URL, MODELS } from "./gemini";
 
 type Body = { contents: { parts: { functionResponse?: { response: object } }[] }[] };
 
@@ -69,6 +69,34 @@ test("TC-20: with no tool, the model's own words are not shown", async () => {
   expect(await askAssistant("Who is our best customer?")).toBe(CANNOT_ANSWER);
 });
 
+test("a number the model changed is never shown", async () => {
+  server.use(
+    http.post(GEMINI_URL, async ({ request }) => {
+      const body = (await request.json()) as Body;
+      if (!body.contents.at(-1)!.parts[0].functionResponse) {
+        return modelSays({ functionCall: { id: "1", name: "countOrders", args: {} } });
+      }
+      return modelSays({ text: "There are 15 orders." });
+    }),
+  );
+
+  expect(await askAssistant("How many orders?")).toBe("orders: 6");
+});
+
+test("a correct answer in Bangla digits is kept", async () => {
+  server.use(
+    http.post(GEMINI_URL, async ({ request }) => {
+      const body = (await request.json()) as Body;
+      if (!body.contents.at(-1)!.parts[0].functionResponse) {
+        return modelSays({ functionCall: { id: "1", name: "totalRevenue", args: {} } });
+      }
+      return modelSays({ text: "মোট আয় ৪,৯৯৫.০০ টাকা" });
+    }),
+  );
+
+  expect(await askAssistant("মোট আয় কত?")).toBe("মোট আয় ৪,৯৯৫.০০ টাকা");
+});
+
 test("missing key", async () => {
   vi.stubEnv("VITE_GEMINI_API_KEY", "");
 
@@ -80,10 +108,30 @@ test.each([
   [403, "PERMISSION_DENIED", "key is invalid"],
   [429, "RESOURCE_EXHAUSTED", "quota"],
   [500, "INTERNAL", "status 500"],
+  [503, "UNAVAILABLE", "busy"],
 ])("error %i %s", async (status, reason, message) => {
   server.use(http.post(GEMINI_URL, () => HttpResponse.json({ error: { reason } }, { status })));
 
   await expect(askAssistant("Hi")).rejects.toThrow(message);
+});
+
+test("a busy model hands the question to the next model", async () => {
+  const models: string[] = [];
+  server.use(
+    http.post(GEMINI_URL, async ({ request }) => {
+      const model = new URL(request.url).pathname.split("/").at(-1)!.split(":")[0];
+      models.push(model);
+      if (model === MODELS[0]) return HttpResponse.json({}, { status: 429 });
+
+      const body = (await request.json()) as Body;
+      const result = body.contents.at(-1)!.parts[0].functionResponse;
+      if (!result) return modelSays({ functionCall: { id: "1", name: "countOrders", args: {} } });
+      return modelSays({ text: JSON.stringify(result.response) });
+    }),
+  );
+
+  expect(await askAssistant("How many orders?")).toBe('{"orders":6}');
+  expect(models).toEqual([MODELS[0], MODELS[1], MODELS[1]]);
 });
 
 test("network error", async () => {

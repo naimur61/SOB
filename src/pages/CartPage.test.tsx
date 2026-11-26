@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { useState } from "react";
 import { expect, test } from "vitest";
+import { render } from "../test/render";
 import { reserveItem } from "../mocks/cart";
 import CartPage from "./CartPage";
 

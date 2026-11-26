@@ -5,10 +5,10 @@ import { network } from "../mocks/network";
 import { server } from "../mocks/server";
 
 beforeAll(() => server.listen({ onUnhandledFrame: "error" }));
-// The mock price endpoint is instant and reliable unless a test says otherwise
+// The mock server is instant and reliable unless a test says otherwise
 beforeEach(() => {
   localStorage.clear();
-  Object.assign(network, { minDelay: 0, maxDelay: 0, failRate: 0 });
+  Object.assign(network, { minDelay: 0, maxDelay: 0, failRate: 0, reserveFailRate: 0 });
 });
 afterEach(() => {
   cleanup();

@@ -1,16 +1,11 @@
-import { useEffect, useState } from "react";
-import { getMenu } from "../api/menu";
 import type { Menu } from "../types/menu";
+import useFetchData from "./TanstackQueries/useFetchData";
 
 export function useMenu() {
-  const [menu, setMenu] = useState<Menu | null>(null);
-  const [error, setError] = useState("");
+  const { data, isError } = useFetchData<Menu>({ queryKey: "menu", path: "menu" });
 
-  useEffect(() => {
-    getMenu()
-      .then(setMenu)
-      .catch(() => setError("Could not load the menu. Please reload the page."));
-  }, []);
-
-  return { menu, error };
+  return {
+    menu: data ?? null,
+    error: isError ? "Could not load the menu. Please reload the page." : "",
+  };
 }

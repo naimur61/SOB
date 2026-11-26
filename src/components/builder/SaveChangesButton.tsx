@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { updateCartItem } from "../../api/cart";
+import { useApiMutation } from "../../hooks/TanstackQueries/useApiMutation";
+import type { CartItem } from "../../types/cart";
 import type { CartLine } from "../../types/price";
 
 type Props = {
@@ -13,12 +14,13 @@ type Props = {
 function SaveChangesButton({ itemId, line, disabled, onSaved, onFailed }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const save = useApiMutation<CartItem>({ method: "PUT", path: `cart/${itemId}` });
 
   const handleClick = async () => {
     setPending(true);
     setError("");
     try {
-      await updateCartItem(itemId, line);
+      await save.mutateAsync({ body: line });
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

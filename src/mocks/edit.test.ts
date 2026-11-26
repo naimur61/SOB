@@ -38,7 +38,7 @@ test("TC-11: raising C to 3 lists both shortages", () => {
   expect(result).toEqual({ status: 409, message: "Short: 2 egg, 2 cheese" });
 });
 
-test("an expired item cannot be edited", () => {
+test("TC-15 an expired item cannot be edited", () => {
   const id = idOf("b");
   vi.useFakeTimers({ now: Date.now() + RESERVATION_MS + 1000 });
 

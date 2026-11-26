@@ -1,17 +1,12 @@
-import { useEffect, useState } from "react";
-import { getCart } from "../api/cart";
 import type { CartItem } from "../types/cart";
+import useFetchData from "./TanstackQueries/useFetchData";
 
 export function useCart() {
-  const [items, setItems] = useState<CartItem[] | null>(null);
-  const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
+  const { data, isError, refetch } = useFetchData<CartItem[]>({ queryKey: "cart", path: "cart" });
 
-  useEffect(() => {
-    getCart()
-      .then(setItems)
-      .catch(() => setError("Could not load the cart. Please reload the page."));
-  }, [version]);
-
-  return { items, error, reload: () => setVersion((v) => v + 1) };
+  return {
+    items: data ?? null,
+    error: isError ? "Could not load the cart. Please reload the page." : "",
+    reload: () => refetch(),
+  };
 }

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { removeCartItem } from "../api/cart";
 import CartItemRow from "../components/cart/CartItemRow";
 import CartSummary from "../components/cart/CartSummary";
 import PayButton from "../components/cart/PayButton";
 import { priceCart } from "../engine/pricing";
+import { useApiMutation } from "../hooks/TanstackQueries/useApiMutation";
 import { useCart } from "../hooks/useCart";
 import { useMenu } from "../hooks/useMenu";
 import type { CartItem } from "../types/cart";
@@ -22,9 +22,11 @@ function CartPage({ serverNow, couponCode, onCouponChange, onEdit }: Props) {
   const { items, error: cartError, reload } = useCart();
   const [removeError, setRemoveError] = useState("");
   const [paid, setPaid] = useState<Order>();
+  const remove = useApiMutation<null>({ method: "DELETE" });
 
   if (menuError || cartError) return <p role="alert">{menuError || cartError}</p>;
-  if (!menu || !items || serverNow === null) return <p>Loading cart...</p>;
+  if (!menu || !items) return <p>Loading cart...</p>;
+  if (serverNow === null) return <p className="muted">Syncing server time...</p>;
   if (items.length === 0) {
     return (
       <>
@@ -47,7 +49,7 @@ function CartPage({ serverNow, couponCode, onCouponChange, onEdit }: Props) {
   const handleRemove = async (id: string) => {
     setRemoveError("");
     try {
-      await removeCartItem(id);
+      await remove.mutateAsync({ path: `cart/${id}` });
       reload();
     } catch {
       setRemoveError("Could not remove the item. Please try again.");

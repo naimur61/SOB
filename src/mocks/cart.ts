@@ -22,23 +22,39 @@ export function isActive(item: CartItem) {
 
 // Starting stock minus sold stock and reservations that have not expired
 export function availableStock(items: CartItem[]) {
-  return items.filter(isActive).reduce(
-    (stock, item) => subtractStock(stock, ingredientUsage(item.config, item.quantity, menu.groups)),
-    subtractStock(menu.stock, readDb().sold),
-  );
+  return items
+    .filter(isActive)
+    .reduce(
+      (stock, item) =>
+        subtractStock(
+          stock,
+          ingredientUsage(item.config, item.quantity, menu.groups),
+        ),
+      subtractStock(menu.stock, readDb().sold),
+    );
 }
 
 type CartResult = { item: CartItem } | { status: number; message: string };
 
 // Quantity, rules and stock. "others" are the items that keep their stock.
 function checkLine({ config, quantity }: CartLine, others: CartItem[]) {
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > menu.product.maxQuantity) {
-    return { status: 422, message: `Quantity must be 1-${menu.product.maxQuantity}` };
+  if (
+    !Number.isInteger(quantity) ||
+    quantity < 1 ||
+    quantity > menu.product.maxQuantity
+  ) {
+    return {
+      status: 422,
+      message: `Quantity must be 1-${menu.product.maxQuantity}`,
+    };
   }
 
   const violations = validate(config, menu.groups, menu.rules);
   if (violations.length > 0) {
-    return { status: 422, message: violations.map((v) => v.message).join(". ") };
+    return {
+      status: 422,
+      message: violations.map((v) => v.message).join(". "),
+    };
   }
 
   const need = ingredientUsage(config, quantity, menu.groups);
@@ -52,14 +68,27 @@ function checkLine({ config, quantity }: CartLine, others: CartItem[]) {
 
 // Reserves all ingredients of an item, or nothing at all.
 // Everything is checked first and saved with one single write.
-export function reserveItem(line: CartLine, idempotencyKey: string): CartResult {
+export function reserveItem(
+  line: CartLine,
+  idempotencyKey: string,
+  { fail = false } = {},
+): CartResult {
   const db = readDb();
 
-  const existing = db.items.find((item) => item.idempotencyKey === idempotencyKey);
+  const existing = db.items.find(
+    (item) => item.idempotencyKey === idempotencyKey,
+  );
   if (existing) return { item: existing };
 
   const error = checkLine(line, db.items);
   if (error) return error;
+
+  if (fail) {
+    return {
+      status: 503,
+      message: "Reservation service failed, nothing was reserved",
+    };
+  }
 
   const item: CartItem = {
     id: crypto.randomUUID(),
@@ -79,15 +108,21 @@ export function editItem(id: string, line: CartLine): CartResult {
   const db = readDb();
 
   const old = db.items.find((item) => item.id === id);
-  if (!old) return { status: 404, message: "This item is no longer in the cart" };
-  if (!isActive(old)) return { status: 410, message: "The reservation has expired" };
+  if (!old)
+    return { status: 404, message: "This item is no longer in the cart" };
+  if (!isActive(old))
+    return { status: 410, message: "The reservation has expired" };
 
   // The item's own stock counts as available to itself
   const others = db.items.filter((item) => item.id !== id);
   const error = checkLine(line, others);
   if (error) return error;
 
-  const item: CartItem = { ...old, config: line.config, quantity: line.quantity };
+  const item: CartItem = {
+    ...old,
+    config: line.config,
+    quantity: line.quantity,
+  };
   writeDb({ ...db, items: db.items.map((i) => (i.id === id ? item : i)) });
 
   return { item };

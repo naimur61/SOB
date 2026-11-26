@@ -1,11 +1,13 @@
 import { expect, test, vi } from "vitest";
+import { request } from "../hooks/TanstackQueries/controller/fetchGetData";
 import type { Config } from "../types/menu";
 import { availableStock, RESERVATION_MS, reserveItem } from "./cart";
 import { readDb } from "./db";
+import { network } from "./network";
 
 const A: Config = { toast: 1, scrambled: 2, sausage: 1, ketchup: 1 };
 
-test("the same idempotency key creates one item", () => {
+test("TC-13 the same idempotency key creates one item", () => {
   reserveItem({ config: A, quantity: 1 }, "key-1");
   reserveItem({ config: A, quantity: 1 }, "key-1");
 
@@ -29,7 +31,7 @@ test("an invalid configuration is refused by the server too", () => {
   expect(readDb().items).toHaveLength(0);
 });
 
-test("stock comes back after 5 minutes of server time", () => {
+test("TC-15 stock comes back after 5 minutes of server time", () => {
   vi.useFakeTimers();
   reserveItem({ config: A, quantity: 1 }, "key-1");
 
@@ -41,4 +43,21 @@ test("stock comes back after 5 minutes of server time", () => {
   expect(readDb().items).toHaveLength(1); // the item stays in the cart, expired
 
   vi.useRealTimers();
+});
+
+test("TC-14 a reserve that fails mid-way holds no stock and retry works", async () => {
+  const line = { config: A, quantity: 1 };
+  const before = availableStock(readDb().items);
+
+  const add = () =>
+    request("cart", { method: "POST", body: line, headers: { "Idempotency-Key": "key-1" } });
+
+  network.reserveFailRate = 1;
+  await expect(add()).rejects.toThrow("nothing was reserved");
+  expect(availableStock(readDb().items)).toEqual(before);
+  expect(readDb().items).toEqual([]);
+
+  network.reserveFailRate = 0;
+  await add();
+  expect(readDb().items).toHaveLength(1);
 });

@@ -57,7 +57,7 @@ test("TC-07: at 11:00:00 the coupon is rejected", () => {
   });
 });
 
-test("the 11:00 cut-off is Dhaka time", () => {
+test("TC-06 TC-07 the 11:00 cut-off is Dhaka time", () => {
   // 04:59:59 UTC is 10:59:59 in Dhaka
   expect(price(bigCart, "2026-11-26T04:59:59Z").couponStatus).toBe("applied");
   expect(price(bigCart, "2026-11-26T05:00:00Z").couponStatus).toBe("expired");

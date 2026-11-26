@@ -1,47 +1,37 @@
 import { useEffect, useState } from "react";
-import { getPrice } from "../api/price";
 import type { Config } from "../types/menu";
 import type { Price } from "../types/price";
-
-type Result = {
-  body: string;
-  attempt: number;
-  price: Price | null; // null means the request failed
-};
+import useFetchData from "./TanstackQueries/useFetchData";
 
 export function usePricePreview(config: Config, quantity: number) {
-  const [attempt, setAttempt] = useState(0);
-  const [result, setResult] = useState<Result | null>(null);
-
-  // A string, so the effect only runs again when the selection really changes
+  // A string, so the timer only restarts when the selection really changes
   const body = JSON.stringify({ lines: [{ config, quantity }] });
+  const [debounced, setDebounced] = useState("");
 
+  // Debounce: wait until the user stops clicking
   useEffect(() => {
-    const controller = new AbortController();
+    const timer = setTimeout(() => setDebounced(body), 300);
+    return () => clearTimeout(timer);
+  }, [body]);
 
-    // Debounce: wait until the user stops clicking
-    const timer = setTimeout(() => {
-      getPrice(JSON.parse(body), controller.signal)
-        .then((price) => setResult({ body, attempt, price }))
-        .catch(() => {
-          if (!controller.signal.aborted) setResult({ body, attempt, price: null });
-        });
-    }, 300);
+  // Each selection is its own query, so an older answer cannot replace a newer one.
+  // The older request is cancelled.
+  const query = useFetchData<Price>({
+    queryKey: "price",
+    path: "price",
+    method: "POST",
+    filterData: debounced ? JSON.parse(debounced) : undefined,
+    options: { enabled: debounced !== "" },
+  });
 
-    // A newer selection cancels the older request
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [body, attempt]);
-
-  // A result is only used if it answers the current selection
-  const current = result?.body === body && result.attempt === attempt ? result : null;
+  // A price is only used if it answers the current selection
+  const loading = debounced !== body || query.isFetching;
+  const failed = !loading && query.isError;
 
   return {
-    price: current?.price ?? null,
-    loading: current === null,
-    failed: current !== null && current.price === null,
-    retry: () => setAttempt((n) => n + 1),
+    price: loading || failed ? null : (query.data ?? null),
+    loading,
+    failed,
+    retry: () => query.refetch(),
   };
 }

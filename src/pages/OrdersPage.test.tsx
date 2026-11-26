@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { expect, test } from "vitest";
+import { render } from "../test/render";
 import { reserveItem } from "../mocks/cart";
 import { checkout } from "../mocks/checkout";
 import { readDb } from "../mocks/db";

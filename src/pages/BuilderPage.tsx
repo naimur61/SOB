@@ -72,6 +72,7 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
   return (
     <>
       {editing && !expired && <h2>Editing a cart item</h2>}
+      {editing && !serverNow && <p className="muted">Syncing server time...</p>}
       {expired && (
         <p className="notice" role="alert">
           This reservation has expired and its stock was released. Your changes are kept here. You

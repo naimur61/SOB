@@ -1,19 +1,18 @@
-import { useEffect, useState } from "react";
-import { getStock } from "../api/stock";
+import { keepPreviousData } from "@tanstack/react-query";
 import type { Stock } from "../engine/stock";
+import useFetchData from "./TanstackQueries/useFetchData";
 
 // Loads again whenever refreshKey changes or reload() is called
 export function useStock(refreshKey = 0) {
-  const [stock, setStock] = useState<Stock | null>(null);
-  const [error, setError] = useState("");
+  const { data, isError, refetch } = useFetchData<Stock>({
+    queryKey: ["stock", refreshKey],
+    path: "stock",
+    options: { placeholderData: keepPreviousData },
+  });
 
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    getStock()
-      .then(setStock)
-      .catch(() => setError("Could not load the stock. Please reload the page."));
-  }, [version, refreshKey]);
-
-  return { stock, error, reload: () => setVersion((v) => v + 1) };
+  return {
+    stock: data ?? null,
+    error: isError ? "Could not load the stock. Please reload the page." : "",
+    reload: () => refetch(),
+  };
 }

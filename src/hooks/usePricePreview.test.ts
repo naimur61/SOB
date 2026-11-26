@@ -1,6 +1,7 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { delay, http, HttpResponse } from "msw";
 import { expect, test } from "vitest";
+import { renderHook } from "../test/render";
 import { network } from "../mocks/network";
 import { server } from "../mocks/server";
 import type { Cart } from "../types/price";
