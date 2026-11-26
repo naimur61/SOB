@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { expect, test } from "vitest";
 import { render } from "../../test/render";
@@ -33,6 +33,8 @@ async function showWithCoupon(time: string) {
     target: { value: "MORNING15" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+  // The form submits asynchronously, so wait for the coupon message
+  await screen.findByRole("status");
 }
 
 test("TC-06: breakdown at 10:59:59", async () => {
@@ -51,4 +53,15 @@ test("TC-07: breakdown at 11:00:00", async () => {
   expect(screen.getByText("−100.00 BDT")).toBeInTheDocument();
   expect(screen.getByText("77.98 BDT")).toBeInTheDocument();
   expect(screen.getByText("1637.00 BDT")).toBeInTheDocument();
+});
+
+test("clearing the coupon field removes the coupon", async () => {
+  await showWithCoupon("10:59:59");
+  expect(screen.getByText("−150.00 BDT")).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText("Coupon code"), { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+
+  await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+  expect(screen.queryByText("−150.00 BDT")).not.toBeInTheDocument();
 });

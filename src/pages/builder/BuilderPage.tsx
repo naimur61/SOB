@@ -1,9 +1,10 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import AddToCartButton from "./AddToCartButton";
 import OptionGroup from "./OptionGroup";
 import PricePreview from "./PricePreview";
-import QuantityPicker from "./QuantityPicker";
+import QuantityPicker, { type QuantityForm } from "./QuantityPicker";
 import SaveChangesButton from "./SaveChangesButton";
 import StockNote from "./StockNote";
 import ViolationList from "./ViolationList";
@@ -51,7 +52,10 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
     options: { placeholderData: keepPreviousData },
   });
   const [config, setConfig] = useState<Config>(editing?.config ?? {});
-  const [quantity, setQuantity] = useState(editing?.quantity ?? 1);
+  // The form owns the quantity. useWatch re-renders the page when it changes,
+  // so the price and the stock check always use the picked number.
+  const form = useForm<QuantityForm>({ defaultValues: { quantity: editing?.quantity ?? 1 } });
+  const quantity = useWatch({ control: form.control, name: "quantity" });
   const [added, setAdded] = useState(false);
 
   if (menuFailed) return <p role="alert">Could not load the menu. Please reload the page.</p>;
@@ -84,14 +88,15 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
       return;
     }
     setConfig({});
-    setQuantity(1);
+    form.setValue("quantity", 1);
     setAdded(true);
     reloadStock();
     reloadCart();
   };
 
   return (
-    <>
+    // Gives QuantityPicker access to the form
+    <FormProvider {...form}>
       {editing && !expired && <h2>Editing a cart item</h2>}
       {editing && !serverNow && <p className="muted">Syncing server time...</p>}
       {expired && (
@@ -115,7 +120,7 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
         />
       ))}
 
-      <QuantityPicker quantity={quantity} max={menu.product.maxQuantity} onChange={setQuantity} />
+      <QuantityPicker max={menu.product.maxQuantity} />
       <ViolationList violations={violations} />
       <StockNote shortages={shortages} />
       <PricePreview config={config} quantity={quantity} />
@@ -136,7 +141,7 @@ function BuilderPage({ editing, serverNow, onDone }: Props) {
           onFailed={reloadStock}
         />
       )}
-    </>
+    </FormProvider>
   );
 }
 

@@ -107,3 +107,18 @@ test("an option that was removed again is not saved with quantity 0", async () =
   await screen.findByRole("status");
   expect(readDb().items[0].config).toStrictEqual({ toast: 1, scrambled: 2, tofu: 1 });
 });
+
+test("the picked quantity is saved as a number and goes back to 1 after adding", async () => {
+  render(<BuilderPage />);
+
+  fireEvent.click(await screen.findByRole("button", { name: "Add Toast" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add Scrambled" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add Scrambled" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add Chicken Sausage" }));
+  fireEvent.change(screen.getByLabelText("Quantity"), { target: { value: "3" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add to Cart" }));
+
+  expect(await screen.findByText(/Added to cart/)).toBeInTheDocument();
+  expect(readDb().items[0].quantity).toBe(3);
+  expect(screen.getByLabelText("Quantity")).toHaveValue("1");
+});

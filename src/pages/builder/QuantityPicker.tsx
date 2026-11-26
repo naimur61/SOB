@@ -1,16 +1,18 @@
-type Props = {
-  quantity: number;
-  max: number;
-  onChange: (quantity: number) => void;
-};
+import { useFormContext } from "react-hook-form";
 
-function QuantityPicker({ quantity, max, onChange }: Props) {
+export type QuantityForm = { quantity: number };
+
+type Props = { max: number };
+
+// Must be inside a FormProvider: the quantity lives in that form
+function QuantityPicker({ max }: Props) {
+  const { register } = useFormContext<QuantityForm>();
   const choices = Array.from({ length: max }, (_, i) => i + 1);
 
   return (
     <label className="quantity">
       Quantity
-      <select value={quantity} onChange={(e) => onChange(Number(e.target.value))}>
+      <select {...register("quantity", { valueAsNumber: true })}>
         {choices.map((n) => (
           <option key={n} value={n}>
             {n}
