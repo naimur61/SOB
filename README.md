@@ -3,6 +3,9 @@
 Build a breakfast item, reserve its ingredients, check out, and ask a chat assistant about sales.
 There is no real backend: MSW (Mock Service Worker) plays the server.
 
+Built with React 19, Vite, TypeScript, TanStack Query (server data), React Hook Form (forms) and
+Vitest.
+
 ## Setup
 
 Needs Node 22.12 or newer.
@@ -13,27 +16,37 @@ cp .env.example .env.local   # then put your Gemini key after VITE_GEMINI_API_KE
 npm run dev
 ```
 
-| Command | What it does |
-|---|---|
-| `npm test` | Runs all tests |
+| Command           | What it does                            |
+| ----------------- | --------------------------------------- |
+| `npm test`        | Runs all tests                          |
 | `npm run answers` | Prints the numbers used in `ANSWERS.md` |
-| `npm run build` | Type-checks and builds |
-| `npm run lint` | Lints |
+| `npm run build`   | Type-checks and builds                  |
+| `npm run lint`    | Lints                                   |
 
 ## Folders
 
 ```
 src/
+  app/          App shell: page switching, header, server clock
+  pages/        one folder per page: the page file and the components only it uses
+    builder/    BuilderPage and its option, price and stock pieces
+    cart/       CartPage, cart rows, summary, pay button
+    orders/     OrdersPage, order list, download button
+    assistant/  ChatPanel, the Gemini call and the tools it can pick
+  hooks/        the shared TanStack Query pieces: useFetchData, useApiMutation, queryClient
+  lib/          request(): the one function every server call goes through
   engine/       pure functions: rules, stock, pricing, order, stats
-  mocks/        the mock server (handlers, storage, menu and seed data)
-  api/          one small fetch function per endpoint
-  hooks/        loading data into React
-  components/   builder, cart, orders, assistant
-  pages/        Builder, Cart, Orders
-  assistant/    Gemini call and the tools it can pick
+  types/        data shapes
+  utils/        money, time, orders file
+  mocks/        the mock server: handlers.ts (routes), backend/ (its logic), data/ (menu, seed orders)
+  test/         test setup and helpers
 ```
 
 ## How it works
+
+**Flow.** A page is made of the components in its folder. It loads data with `useFetchData` and
+changes it with `useApiMutation`. Both call `request()` in `lib/request.ts`, and MSW answers.
+Every form (question, coupon, payment method, quantity) uses React Hook Form.
 
 **Data.** `src/mocks/data/menu.json` holds groups, options, rules, stock, promotions, VAT and payment
 methods. Components and engines read ids and limits from it, so another menu works without code
@@ -52,15 +65,15 @@ server, the cart page and the tests all use it.
 edits and checkout check everything first and then save with one write. The server clock runs 90
 seconds ahead of the browser.
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/menu`, `/api/time`, `/api/stock` | Menu, server time, available stock |
-| `POST /api/price` | Price preview (200-1500 ms, fails 15% of the time) |
-| `GET /api/cart`, `POST /api/cart` | List items, reserve an item (idempotency key) |
-| `PUT /api/cart/:id`, `DELETE /api/cart/:id` | Edit or remove an item |
-| `POST /api/checkout`, `GET /api/orders` | Pay (idempotency key), list orders |
+| Endpoint                                    | Purpose                                                                                                                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/menu`, `/api/time`, `/api/stock`  | Menu, server time, available stock                                                                                                                                      |
+| `POST /api/price`                           | Price preview (200-1500 ms, fails 15% of the time)                                                                                                                      |
+| `GET /api/cart`, `POST /api/cart`           | List items, reserve an item (idempotency key). `POST` fails 10% of the time (`reserveFailRate` in `src/mocks/backend/network.ts`) and nothing is reserved when it fails |
+| `PUT /api/cart/:id`, `DELETE /api/cart/:id` | Edit or remove an item                                                                                                                                                  |
+| `POST /api/checkout`, `GET /api/orders`     | Pay (idempotency key), list orders                                                                                                                                      |
 
-**Assistant** (`assistant/`). Gemini only chooses a tool and words its result. The tools in
+**Assistant** (`pages/assistant/`). Gemini only chooses a tool and words its result. The tools in
 `tools.ts` run the functions in `engine/stats.ts` on the latest orders. Raw orders are never sent.
 If the model chooses no tool, its text is dropped and a fixed "cannot answer" message is shown.
 
@@ -87,4 +100,4 @@ To start again with only the seed data, clear the `sob-db` key in the browser's 
 
 ## Hours spent
 
-TODO
+About 7 hours.
