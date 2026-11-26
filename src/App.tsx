@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ChatPanel from "./components/assistant/ChatPanel";
 import Header from "./components/builder/Header";
 import { useServerClock } from "./hooks/useServerClock";
 import BuilderPage from "./pages/BuilderPage";
@@ -10,6 +11,7 @@ const pages = [
   { id: "builder", label: "Builder" },
   { id: "cart", label: "Cart" },
   { id: "orders", label: "Orders" },
+  { id: "assistant", label: "Sales assistant" },
 ] as const;
 
 type Page = (typeof pages)[number]["id"];
@@ -59,6 +61,7 @@ function App() {
         />
       )}
       {page === "orders" && <OrdersPage />}
+      {page === "assistant" && <ChatPanel />}
     </main>
   );
 }
