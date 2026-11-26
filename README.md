@@ -83,7 +83,7 @@ To start again with only the seed data, clear the `sob-db` key in the browser's 
 - Part G: cart version numbers for stale tabs, and keeping an unfinished configuration after a
   refresh. Unfinished selections are also lost when switching pages.
 - Changes made in another tab show up only after switching pages or when an action is refused.
-- The assistant answers in English only when it cannot answer.
+- The "cannot answer" message of the assistant is in English only.
 
 ## Hours spent
 
