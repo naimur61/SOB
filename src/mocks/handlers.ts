@@ -3,6 +3,7 @@ import { priceCart } from "../engine/pricing";
 import type { Menu } from "../types/menu";
 import type { Cart, CartLine } from "../types/price";
 import { availableStock, editItem, removeItem, reserveItem } from "./cart";
+import { checkout, type Payment } from "./checkout";
 import { serverNow } from "./clock";
 import menuJson from "./data/menu.json";
 import { readDb } from "./db";
@@ -56,6 +57,21 @@ export const handlers = [
   http.delete<{ id: string }>("/api/cart/:id", ({ params }) => {
     removeItem(params.id);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("/api/checkout", async ({ request }) => {
+    const payment = (await request.json()) as Payment;
+    const key = request.headers.get("Idempotency-Key");
+    if (!key) {
+      return HttpResponse.json({ message: "Idempotency key missing" }, { status: 400 });
+    }
+
+    const result = checkout(payment, key);
+    if ("message" in result) {
+      return HttpResponse.json({ message: result.message }, { status: result.status });
+    }
+
+    return HttpResponse.json(result.order, { status: 201 });
   }),
 
   http.post("/api/price", async ({ request }) => {

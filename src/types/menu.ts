@@ -44,6 +44,7 @@ export type Menu = {
   stock: Record<string, number>;
   promotions: Promotion[];
   vatPercent: number;
+  paymentMethods: string[];
 };
 
 // What the user picked: option id -> quantity

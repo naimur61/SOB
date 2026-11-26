@@ -211,3 +211,16 @@ button.primary {
   border: 1px solid var(--border);
   border-radius: 4px;
 }
+
+.pay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.pay select {
+  font: inherit;
+  padding: 6px 8px;
+}

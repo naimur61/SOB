@@ -16,15 +16,15 @@ const menu = menuJson as Menu;
 
 export const RESERVATION_MS = 5 * 60 * 1000;
 
-function isActive(item: CartItem) {
+export function isActive(item: CartItem) {
   return Date.parse(item.expiresAt) > serverNow();
 }
 
-// Starting stock minus everything held by reservations that have not expired
+// Starting stock minus sold stock and reservations that have not expired
 export function availableStock(items: CartItem[]) {
   return items.filter(isActive).reduce(
     (stock, item) => subtractStock(stock, ingredientUsage(item.config, item.quantity, menu.groups)),
-    menu.stock,
+    subtractStock(menu.stock, readDb().sold),
   );
 }
 

@@ -99,5 +99,7 @@
     }
   ],
 
-  "vatPercent": 5
+  "vatPercent": 5,
+
+  "paymentMethods": ["card", "bkash", "cash"]
 }
