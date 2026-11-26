@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { removeCartItem } from "../api/cart";
 import CartItemRow from "../components/cart/CartItemRow";
+import CartSummary from "../components/cart/CartSummary";
+import { priceCart } from "../engine/pricing";
 import { useCart } from "../hooks/useCart";
 import { useMenu } from "../hooks/useMenu";
 import type { CartItem } from "../types/cart";
 
 type Props = {
   serverNow: number | null;
+  couponCode: string;
+  onCouponChange: (code: string) => void;
   onEdit: (item: CartItem) => void;
 };
 
-function CartPage({ serverNow, onEdit }: Props) {
+function CartPage({ serverNow, couponCode, onCouponChange, onEdit }: Props) {
   const { menu, error: menuError } = useMenu();
   const { items, error: cartError, reload } = useCart();
   const [removeError, setRemoveError] = useState("");
@@ -29,6 +33,10 @@ function CartPage({ serverNow, onEdit }: Props) {
     }
   };
 
+  // Prices are not locked yet (D2): they follow the server time until checkout
+  const active = items.filter((item) => Date.parse(item.expiresAt) > serverNow);
+  const price = priceCart({ lines: active, couponCode }, menu, menu.promotions, serverNow);
+
   return (
     <>
       {removeError && (
@@ -42,12 +50,22 @@ function CartPage({ serverNow, onEdit }: Props) {
             key={item.id}
             item={item}
             menu={menu}
+            price={price.lines[active.indexOf(item)]}
             serverNow={serverNow}
             onEdit={() => onEdit(item)}
             onRemove={() => handleRemove(item.id)}
           />
         ))}
       </ul>
+
+      {active.length > 0 && (
+        <CartSummary
+          price={price}
+          menu={menu}
+          couponCode={couponCode}
+          onCouponChange={onCouponChange}
+        />
+      )}
     </>
   );
 }

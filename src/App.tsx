@@ -11,6 +11,7 @@ function App() {
   const serverNow = useServerClock();
   const [page, setPage] = useState<Page>("builder");
   const [editing, setEditing] = useState<CartItem>();
+  const [couponCode, setCouponCode] = useState("");
 
   const open = (next: Page, item?: CartItem) => {
     setEditing(item);
@@ -46,7 +47,12 @@ function App() {
           onDone={() => open("cart")}
         />
       ) : (
-        <CartPage serverNow={serverNow} onEdit={(item) => open("builder", item)} />
+        <CartPage
+          serverNow={serverNow}
+          couponCode={couponCode}
+          onCouponChange={setCouponCode}
+          onEdit={(item) => open("builder", item)}
+        />
       )}
     </main>
   );

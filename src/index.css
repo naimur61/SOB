@@ -197,3 +197,17 @@ button.primary {
   display: flex;
   gap: 8px;
 }
+
+.coupon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.coupon input {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}

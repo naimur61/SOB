@@ -1,10 +1,13 @@
 import type { CartItem } from "../../types/cart";
 import type { Menu } from "../../types/menu";
+import type { PricedLine } from "../../types/price";
+import { formatTaka } from "../../utils/money";
 import { formatCountdown } from "../../utils/time";
 
 type Props = {
   item: CartItem;
   menu: Menu;
+  price?: PricedLine; // expired items have no price
   serverNow: number;
   onEdit: () => void;
   onRemove: () => void;
@@ -19,7 +22,7 @@ function describe(item: CartItem, menu: Menu) {
     .join(", ");
 }
 
-function CartItemRow({ item, menu, serverNow, onEdit, onRemove }: Props) {
+function CartItemRow({ item, menu, price, serverNow, onEdit, onRemove }: Props) {
   const timeLeft = Date.parse(item.expiresAt) - serverNow;
   const expired = timeLeft <= 0;
 
@@ -31,6 +34,15 @@ function CartItemRow({ item, menu, serverNow, onEdit, onRemove }: Props) {
         </strong>
       </p>
       <p>{describe(item, menu)}</p>
+      {price && (
+        <p>
+          {formatTaka(price.unitSubtotal)}
+          {price.extrasDiscount > 0 && `, extras deal −${formatTaka(price.extrasDiscount)}`}
+          {price.comboDiscount > 0 && `, combo −${formatTaka(price.comboDiscount)}`}
+          {` = ${formatTaka(price.unitPrice)} x ${price.quantity} = `}
+          <strong>{formatTaka(price.total)}</strong>
+        </p>
+      )}
       <p className={expired ? "stock-short" : "muted"}>
         {expired
           ? "Reservation expired. Stock was released and this item is read-only."
