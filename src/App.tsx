@@ -1,5 +1,6 @@
 import Header from "./components/builder/Header";
 import { useServerClock } from "./hooks/useServerClock";
+import BuilderPage from "./pages/BuilderPage";
 
 function App() {
   const serverNow = useServerClock();
@@ -7,6 +8,7 @@ function App() {
   return (
     <main className="container">
       <Header serverNow={serverNow} />
+      <BuilderPage />
     </main>
   );
 }
