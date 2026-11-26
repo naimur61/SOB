@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
-import { network } from "../mocks/network";
+import { network } from "../mocks/backend/network";
 import { server } from "../mocks/server";
 
 beforeAll(() => server.listen({ onUnhandledFrame: "error" }));

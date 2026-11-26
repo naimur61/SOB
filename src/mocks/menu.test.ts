@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { request } from "../hooks/TanstackQueries/controller/fetchGetData";
+import { request } from "../lib/request";
 import type { Menu } from "../types/menu";
 
 test("mock api serves the menu", async () => {

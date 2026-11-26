@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { render as baseRender, renderHook as baseRenderHook } from "@testing-library/react";
 import { createElement, useState, type ReactElement, type ReactNode } from "react";
-import { createQueryClient } from "../hooks/TanstackQueries/queryClient";
+import { createQueryClient } from "../hooks/queryClient";
 
 // Gives every test its own query client
 function Wrapper({ children }: { children: ReactNode }) {

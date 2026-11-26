@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from "vitest";
-import { readDb } from "../mocks/db";
+import { readDb } from "../mocks/backend/db";
 import type { Order } from "../types/order";
 import {
   averageOrderValue,

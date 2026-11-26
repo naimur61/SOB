@@ -9,7 +9,7 @@ import {
   totalRevenue,
 } from "../engine/stats";
 import { findShortages, ingredientUsage } from "../engine/stock";
-import { readDb } from "../mocks/db";
+import { readDb } from "../mocks/backend/db";
 import menuJson from "../mocks/data/menu.json";
 import type { Config, Group, Menu } from "../types/menu";
 import type { Cart } from "../types/price";

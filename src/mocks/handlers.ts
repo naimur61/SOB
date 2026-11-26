@@ -2,12 +2,12 @@ import { delay, http, HttpResponse } from "msw";
 import { priceCart } from "../engine/pricing";
 import type { Menu } from "../types/menu";
 import type { Cart, CartLine } from "../types/price";
-import { availableStock, editItem, removeItem, reserveItem } from "./cart";
-import { checkout, type Payment } from "./checkout";
-import { serverNow } from "./clock";
+import { availableStock, editItem, removeItem, reserveItem } from "./backend/cart";
+import { checkout, type Payment } from "./backend/checkout";
+import { serverNow } from "./backend/clock";
 import menuJson from "./data/menu.json";
-import { readDb } from "./db";
-import { network } from "./network";
+import { readDb } from "./backend/db";
+import { network } from "./backend/network";
 
 const menu = menuJson as Menu;
 

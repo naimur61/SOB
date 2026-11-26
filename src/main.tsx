@@ -1,8 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import { createQueryClient } from "./hooks/TanstackQueries/queryClient";
+import App from "./app/App";
+import { createQueryClient } from "./hooks/queryClient";
 import "./index.css";
 
 async function start() {
