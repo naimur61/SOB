@@ -7,3 +7,9 @@ export function formatDhakaTime(ms: number) {
     second: "2-digit",
   }).format(ms);
 }
+
+// 299500 -> "5:00", 61000 -> "1:01"
+export function formatCountdown(ms: number) {
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}

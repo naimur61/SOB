@@ -28,18 +28,10 @@ export function availableStock(items: CartItem[]) {
   );
 }
 
-type ReserveResult = { item: CartItem } | { status: number; message: string };
+type CartResult = { item: CartItem } | { status: number; message: string };
 
-// Reserves all ingredients of an item, or nothing at all.
-// Everything is checked first and saved with one single write.
-export function reserveItem(line: CartLine, idempotencyKey: string): ReserveResult {
-  const db = readDb();
-
-  const existing = db.items.find((item) => item.idempotencyKey === idempotencyKey);
-  if (existing) return { item: existing };
-
-  const { config, quantity } = line;
-
+// Quantity, rules and stock. "others" are the items that keep their stock.
+function checkLine({ config, quantity }: CartLine, others: CartItem[]) {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > menu.product.maxQuantity) {
     return { status: 422, message: `Quantity must be 1-${menu.product.maxQuantity}` };
   }
@@ -50,19 +42,58 @@ export function reserveItem(line: CartLine, idempotencyKey: string): ReserveResu
   }
 
   const need = ingredientUsage(config, quantity, menu.groups);
-  const shortages = findShortages(need, availableStock(db.items));
+  const shortages = findShortages(need, availableStock(others));
   if (shortages.length > 0) {
     return { status: 409, message: shortageMessage(shortages) };
   }
 
+  return null;
+}
+
+// Reserves all ingredients of an item, or nothing at all.
+// Everything is checked first and saved with one single write.
+export function reserveItem(line: CartLine, idempotencyKey: string): CartResult {
+  const db = readDb();
+
+  const existing = db.items.find((item) => item.idempotencyKey === idempotencyKey);
+  if (existing) return { item: existing };
+
+  const error = checkLine(line, db.items);
+  if (error) return error;
+
   const item: CartItem = {
     id: crypto.randomUUID(),
-    config,
-    quantity,
+    config: line.config,
+    quantity: line.quantity,
     idempotencyKey,
     expiresAt: new Date(serverNow() + RESERVATION_MS).toISOString(),
   };
   writeDb({ ...db, items: [...db.items, item] });
 
   return { item };
+}
+
+// Swaps the old allocation for the new one in a single write.
+// The expiry time stays the same.
+export function editItem(id: string, line: CartLine): CartResult {
+  const db = readDb();
+
+  const old = db.items.find((item) => item.id === id);
+  if (!old) return { status: 404, message: "This item is no longer in the cart" };
+  if (!isActive(old)) return { status: 410, message: "The reservation has expired" };
+
+  // The item's own stock counts as available to itself
+  const others = db.items.filter((item) => item.id !== id);
+  const error = checkLine(line, others);
+  if (error) return error;
+
+  const item: CartItem = { ...old, config: line.config, quantity: line.quantity };
+  writeDb({ ...db, items: db.items.map((i) => (i.id === id ? item : i)) });
+
+  return { item };
+}
+
+export function removeItem(id: string) {
+  const db = readDb();
+  writeDb({ ...db, items: db.items.filter((item) => item.id !== id) });
 }

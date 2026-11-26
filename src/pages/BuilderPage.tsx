@@ -3,20 +3,30 @@ import AddToCartButton from "../components/builder/AddToCartButton";
 import OptionGroup from "../components/builder/OptionGroup";
 import PricePreview from "../components/builder/PricePreview";
 import QuantityPicker from "../components/builder/QuantityPicker";
+import SaveChangesButton from "../components/builder/SaveChangesButton";
 import StockNote from "../components/builder/StockNote";
 import ViolationList from "../components/builder/ViolationList";
 import { validate } from "../engine/rules";
-import { findShortages, ingredientUsage, optionStock } from "../engine/stock";
+import { addStock, findShortages, ingredientUsage, optionStock } from "../engine/stock";
 import { useMenu } from "../hooks/useMenu";
 import { useStock } from "../hooks/useStock";
+import type { CartItem } from "../types/cart";
 import type { Config } from "../types/menu";
 import { formatTaka } from "../utils/money";
 
-function BuilderPage() {
+type Props = {
+  editing?: CartItem; // set when changing an item that is already in the cart
+  serverNow?: number | null;
+  onDone?: () => void; // called after an edit is saved
+};
+
+function BuilderPage({ editing, serverNow, onDone }: Props) {
+  const expired = !!editing && !!serverNow && Date.parse(editing.expiresAt) <= serverNow;
+
   const { menu, error } = useMenu();
-  const { stock, error: stockError, reload: reloadStock } = useStock();
-  const [config, setConfig] = useState<Config>({});
-  const [quantity, setQuantity] = useState(1);
+  const { stock, error: stockError, reload: reloadStock } = useStock(expired);
+  const [config, setConfig] = useState<Config>(editing?.config ?? {});
+  const [quantity, setQuantity] = useState(editing?.quantity ?? 1);
   const [added, setAdded] = useState(false);
 
   if (error || stockError) return <p role="alert">{error || stockError}</p>;
@@ -24,7 +34,13 @@ function BuilderPage() {
 
   const violations = validate(config, menu.groups, menu.rules);
   const need = ingredientUsage(config, quantity, menu.groups);
-  const shortages = findShortages(need, stock);
+
+  // While editing, the stock the item already holds is available to it
+  const held =
+    editing && !expired ? ingredientUsage(editing.config, editing.quantity, menu.groups) : {};
+  const available = addStock(stock, held);
+  const shortages = findShortages(need, available);
+  const blocked = violations.length > 0 || shortages.length > 0;
 
   const changeQty = (optionId: string, qty: number) => {
     setAdded(false);
@@ -33,6 +49,10 @@ function BuilderPage() {
 
   // Start a fresh item, so the same one is not added again by mistake
   const handleAdded = () => {
+    if (editing) {
+      onDone?.();
+      return;
+    }
     setConfig({});
     setQuantity(1);
     setAdded(true);
@@ -41,6 +61,14 @@ function BuilderPage() {
 
   return (
     <>
+      {editing && !expired && <h2>Editing a cart item</h2>}
+      {expired && (
+        <p className="notice" role="alert">
+          This reservation has expired and its stock was released. Your changes are kept here. You
+          can add them to the cart as a new item.
+        </p>
+      )}
+
       <p>
         {menu.product.name}, base price {formatTaka(menu.product.basePrice)}
       </p>
@@ -51,7 +79,7 @@ function BuilderPage() {
           group={group}
           config={config}
           onChange={changeQty}
-          stockFor={(option) => optionStock(option, need, quantity, stock)}
+          stockFor={(option) => optionStock(option, need, quantity, available)}
         />
       ))}
 
@@ -60,12 +88,22 @@ function BuilderPage() {
       <StockNote shortages={shortages} />
       <PricePreview config={config} quantity={quantity} />
       {added && <p role="status">Added to cart. Stock is held for 5 minutes.</p>}
-      <AddToCartButton
-        line={{ config, quantity }}
-        disabled={violations.length > 0 || shortages.length > 0}
-        onAdded={handleAdded}
-        onFailed={reloadStock}
-      />
+      {editing && !expired ? (
+        <SaveChangesButton
+          itemId={editing.id}
+          line={{ config, quantity }}
+          disabled={blocked}
+          onSaved={() => onDone?.()}
+          onFailed={reloadStock}
+        />
+      ) : (
+        <AddToCartButton
+          line={{ config, quantity }}
+          disabled={blocked}
+          onAdded={handleAdded}
+          onFailed={reloadStock}
+        />
+      )}
     </>
   );
 }
