@@ -39,7 +39,8 @@ function CartItemRow({ item, menu, price, serverNow, onEdit, onRemove }: Props) 
           {formatTaka(price.unitSubtotal)}
           {price.extrasDiscount > 0 && `, extras deal −${formatTaka(price.extrasDiscount)}`}
           {price.comboDiscount > 0 && `, combo −${formatTaka(price.comboDiscount)}`}
-          {` = ${formatTaka(price.unitPrice)} x ${price.quantity} = `}
+          {price.unitPrice < price.unitSubtotal && `, unit price ${formatTaka(price.unitPrice)}`}
+          {` · x${price.quantity} = `}
           <strong>{formatTaka(price.total)}</strong>
         </p>
       )}
