@@ -1,10 +1,11 @@
-import type { Config, Group } from "../../types/menu";
+import type { Config, Group, Option } from "../../types/menu";
 import { formatTaka } from "../../utils/money";
 
 type Props = {
   group: Group;
   config: Config;
   onChange: (optionId: string, qty: number) => void;
+  stockFor: (option: Option) => { canAdd: number | null; reason: string };
 };
 
 // "min 2, max 6, step 2" built from whatever limits the group has
@@ -17,7 +18,7 @@ function limitText(group: Group) {
   return parts.join(", ");
 }
 
-function OptionGroup({ group, config, onChange }: Props) {
+function OptionGroup({ group, config, onChange, stockFor }: Props) {
   return (
     <section className="group">
       <h2>{group.name}</h2>
@@ -26,11 +27,17 @@ function OptionGroup({ group, config, onChange }: Props) {
       <ul>
         {group.options.map((option) => {
           const qty = config[option.id] ?? 0;
+          const { canAdd, reason } = stockFor(option);
 
           return (
             <li key={option.id}>
               <span className="option-name">{option.name}</span>
               <span className="muted">+{formatTaka(option.price)}</span>
+              {canAdd !== null && (
+                <span className={reason ? "stock-short" : "muted"}>
+                  {reason || `can add ${canAdd}`}
+                </span>
+              )}
 
               <button
                 type="button"
@@ -44,6 +51,7 @@ function OptionGroup({ group, config, onChange }: Props) {
               <button
                 type="button"
                 aria-label={`Add ${option.name}`}
+                disabled={canAdd === 0}
                 onClick={() => onChange(option.id, qty + 1)}
               >
                 +

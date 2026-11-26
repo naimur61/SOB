@@ -38,7 +38,7 @@ export type Promotion =
     };
 
 export type Menu = {
-  product: { id: string; name: string; basePrice: number };
+  product: { id: string; name: string; basePrice: number; maxQuantity: number };
   groups: Group[];
   rules: Rule[];
   stock: Record<string, number>;

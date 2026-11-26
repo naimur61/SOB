@@ -109,7 +109,8 @@ button:disabled {
   text-align: center;
 }
 
-.violations {
+.violations,
+.notice {
   list-style: none;
   margin: 0 0 12px;
   padding: 10px 16px;
@@ -117,4 +118,20 @@ button:disabled {
   background: var(--surface);
   border: 1px solid var(--danger);
   border-radius: 6px;
+}
+
+.stock-short {
+  color: var(--danger);
+}
+
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.quantity select {
+  font: inherit;
+  padding: 4px 8px;
 }

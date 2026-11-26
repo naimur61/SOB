@@ -7,6 +7,11 @@ export const handlers = [
     return HttpResponse.json(menu);
   }),
 
+  // Reservations will be subtracted here once the cart exists
+  http.get("/api/stock", () => {
+    return HttpResponse.json(menu.stock);
+  }),
+
   http.get("/api/time", () => {
     return HttpResponse.json({ serverTime: new Date(serverNow()).toISOString() });
   }),

@@ -1,5 +1,5 @@
 {
-  "product": { "id": "breakfast", "name": "Build Your Breakfast", "basePrice": 25000 },
+  "product": { "id": "breakfast", "name": "Build Your Breakfast", "basePrice": 25000, "maxQuantity": 3 },
 
   "groups": [
     {
