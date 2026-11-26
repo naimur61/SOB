@@ -1,5 +1,6 @@
 import { useState } from "react";
 import OptionGroup from "../components/builder/OptionGroup";
+import PricePreview from "../components/builder/PricePreview";
 import QuantityPicker from "../components/builder/QuantityPicker";
 import StockNote from "../components/builder/StockNote";
 import ViolationList from "../components/builder/ViolationList";
@@ -46,6 +47,7 @@ function BuilderPage() {
       <QuantityPicker quantity={quantity} max={menu.product.maxQuantity} onChange={setQuantity} />
       <ViolationList violations={violations} />
       <StockNote shortages={shortages} />
+      <PricePreview config={config} quantity={quantity} />
     </>
   );
 }
