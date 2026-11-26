@@ -41,3 +41,22 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.muted {
+  color: var(--muted);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
